@@ -9,13 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      email_signups: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_early_access: boolean
+          signup_number: number | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_early_access?: boolean
+          signup_number?: number | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_early_access?: boolean
+          signup_number?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          is_premium: boolean
+          skill_score: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          is_premium?: boolean
+          skill_score?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_premium?: boolean
+          skill_score?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      handle_email_signup: {
+        Args: { user_email: string }
+        Returns: {
+          signup_num: number
+          gets_early_access: boolean
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,22 +1,41 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Target, Users, Code, Bug, Trophy, Star, ArrowRight, Mail, Linkedin, Twitter } from 'lucide-react';
+import { CheckCircle, Target, Users, Code, Bug, Trophy, Star, ArrowRight, Mail, Linkedin, Twitter, LogOut, User } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
   const [email, setEmail] = useState('');
   const [isVisible, setIsVisible] = useState(false);
-  const [signupCount, setSignupCount] = useState(42); // Starting count for social proof
+  const [signupCount, setSignupCount] = useState(42);
+  const { user, signOut, loading } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsVisible(true);
+    fetchSignupCount();
   }, []);
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const fetchSignupCount = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('email_signups')
+        .select('signup_number', { count: 'exact' });
+      
+      if (!error && data) {
+        setSignupCount(data.length + 42); // Adding base count for social proof
+      }
+    } catch (error) {
+      console.log('Error fetching signup count:', error);
+    }
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
       toast({
@@ -26,14 +45,63 @@ const Index = () => {
       });
       return;
     }
-    
-    // Simulate signup
-    setSignupCount(prev => prev + 1);
-    toast({
-      title: "🎉 Welcome to the waitlist!",
-      description: "You're in! We'll notify you when early access opens.",
-    });
-    setEmail('');
+
+    try {
+      const { data, error } = await supabase.rpc('handle_email_signup', {
+        user_email: email
+      });
+
+      if (error) {
+        if (error.message.includes('duplicate key value')) {
+          toast({
+            title: "Already signed up!",
+            description: "This email is already on our waitlist.",
+            variant: "destructive"
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      const signupData = data[0];
+      setSignupCount(prev => prev + 1);
+      
+      if (signupData.gets_early_access) {
+        toast({
+          title: "🎉 Congratulations!",
+          description: `You're #${signupData.signup_num} on the waitlist and qualify for FREE premium access!`,
+        });
+      } else {
+        toast({
+          title: "🎉 Welcome to the waitlist!",
+          description: "You're in! We'll notify you when early access opens.",
+        });
+      }
+      setEmail('');
+    } catch (error) {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again later.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You've been successfully signed out.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error signing out",
+        description: "Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const features = [
@@ -87,8 +155,41 @@ const Index = () => {
     "📋 Resume-worthy QA artifacts (PDF-ready)"
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+      {/* Navigation Bar */}
+      {user && (
+        <nav className="bg-white/80 backdrop-blur-sm border-b border-purple-100 sticky top-0 z-50">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Target className="w-6 h-6 text-purple-600" />
+              <span className="font-bold text-gray-900">Tester Academy</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <User className="w-4 h-4" />
+                {user.email}
+              </div>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        </nav>
+      )}
+
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 px-4">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-blue-600/10"></div>
@@ -105,41 +206,65 @@ const Index = () => {
             Master Manual Testing & Selenium with Java by solving real-world QA challenges.<br />
             <span className="font-semibold text-purple-600">Get job-ready through practice—not PDFs.</span>
           </p>
-          
-          <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto mb-8">
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 h-12 text-lg border-2 border-purple-200 focus:border-purple-500"
-            />
-            <Button 
-              type="submit"
-              className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
-            >
-              Join Waitlist <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          </form>
-          
-          <p className="text-sm text-gray-600 mb-4">
-            <span className="font-semibold text-purple-600">{signupCount}</span> testers already joined
-          </p>
-          
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              No spam, just skill
+
+          {!user ? (
+            <>
+              <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto mb-8">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 h-12 text-lg border-2 border-purple-200 focus:border-purple-500"
+                />
+                <Button 
+                  type="submit"
+                  className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+                >
+                  Join Waitlist <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </form>
+              
+              <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mb-6">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  No spam, just skill
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  Free early access
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  Premium credits included
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <p className="text-sm text-gray-600 mb-4">
+                  <span className="font-semibold text-purple-600">{signupCount}</span> testers already joined
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/auth')}
+                  className="border-purple-200 text-purple-600 hover:bg-purple-50"
+                >
+                  Already have an account? Sign In
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="mb-8">
+              <p className="text-xl text-gray-700 mb-6">
+                Welcome back! Your QA learning journey continues here.
+              </p>
+              <Button 
+                className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                Continue Learning <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
             </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              Free early access
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              Premium credits included
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
@@ -292,21 +417,29 @@ const Index = () => {
           
           <p className="text-xl mb-8">👉 Don't just watch others test. Become the tester companies want.</p>
           
-          <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 h-12 text-lg bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30"
-            />
+          {!user ? (
+            <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 h-12 text-lg bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30"
+              />
+              <Button 
+                type="submit"
+                className="h-12 px-8 bg-white text-purple-600 hover:bg-gray-100 font-semibold transition-all duration-300 transform hover:scale-105"
+              >
+                Join Waitlist <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </form>
+          ) : (
             <Button 
-              type="submit"
               className="h-12 px-8 bg-white text-purple-600 hover:bg-gray-100 font-semibold transition-all duration-300 transform hover:scale-105"
             >
-              Join Waitlist <ArrowRight className="ml-2 w-4 h-4" />
+              Start Learning <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
-          </form>
+          )}
         </div>
       </section>
 
@@ -318,23 +451,33 @@ const Index = () => {
             Start your journey with hands-on, challenge-based learning.
           </p>
           
-          <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto mb-8">
-            <Input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 h-12 text-lg bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:border-purple-500"
-            />
+          {!user ? (
+            <>
+              <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto mb-8">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 h-12 text-lg bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:border-purple-500"
+                />
+                <Button 
+                  type="submit"
+                  className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+                >
+                  Join the Waitlist – It's Free
+                </Button>
+              </form>
+              
+              <p className="text-gray-400">No spam. Just skill.</p>
+            </>
+          ) : (
             <Button 
-              type="submit"
               className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
             >
-              Join the Waitlist – It's Free
+              Continue Your Journey
             </Button>
-          </form>
-          
-          <p className="text-gray-400">No spam. Just skill.</p>
+          )}
         </div>
       </section>
 
