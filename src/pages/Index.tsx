@@ -19,7 +19,12 @@ const Index = () => {
   useEffect(() => {
     setIsVisible(true);
     fetchSignupCount();
-  }, []);
+    
+    // Redirect authenticated users to dashboard
+    if (user && !loading) {
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate]);
 
   const fetchSignupCount = async () => {
     try {
@@ -199,7 +204,7 @@ const Index = () => {
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6 leading-tight">
-            The Hands-On QA Learning Platform You Wish Existed Sooner
+            Learn QA Testing Through Challenges
           </h1>
           
           <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-4xl mx-auto leading-relaxed">
@@ -259,9 +264,10 @@ const Index = () => {
                 Welcome back! Your QA learning journey continues here.
               </p>
               <Button 
+                onClick={() => navigate('/dashboard')}
                 className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
               >
-                Continue Learning <ArrowRight className="ml-2 w-4 h-4" />
+                Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
             </div>
           )}
@@ -435,9 +441,10 @@ const Index = () => {
             </form>
           ) : (
             <Button 
+              onClick={() => navigate('/dashboard')}
               className="h-12 px-8 bg-white text-purple-600 hover:bg-gray-100 font-semibold transition-all duration-300 transform hover:scale-105"
             >
-              Start Learning <ArrowRight className="ml-2 w-4 h-4" />
+              Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           )}
         </div>
@@ -473,6 +480,7 @@ const Index = () => {
             </>
           ) : (
             <Button 
+              onClick={() => navigate('/dashboard')}
               className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
             >
               Continue Your Journey
