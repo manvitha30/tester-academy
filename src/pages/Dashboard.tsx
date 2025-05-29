@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +24,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [filterType, setFilterType] = useState<'all' | 'manual' | 'automation'>('all');
 
   useEffect(() => {
     if (!user) {
@@ -84,10 +82,6 @@ const Dashboard = () => {
     ];
     setChallenges(mockChallenges);
   };
-
-  const filteredChallenges = challenges.filter(challenge => 
-    filterType === 'all' || challenge.type === filterType
-  );
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -151,42 +145,9 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Filter Section */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-600" />
-              <span className="text-sm text-gray-600">Filter by type:</span>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant={filterType === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilterType('all')}
-              >
-                All
-              </Button>
-              <Button
-                variant={filterType === 'manual' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilterType('manual')}
-              >
-                <Bug className="w-4 h-4 mr-1" />
-                Manual
-              </Button>
-              <Button
-                variant={filterType === 'automation' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setFilterType('automation')}
-              >
-                <Code className="w-4 h-4 mr-1" />
-                Automation
-              </Button>
-            </div>
-          </div>
-
           {/* Challenges Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredChallenges.map((challenge) => (
+            {challenges.map((challenge) => (
               <Card key={challenge.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/challenge/${challenge.id}`)}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -196,10 +157,6 @@ const Dashboard = () => {
                   <div className="flex items-center gap-2">
                     <Badge className={getDifficultyColor(challenge.difficulty)}>
                       {challenge.difficulty}
-                    </Badge>
-                    <Badge variant="outline">
-                      {challenge.type === 'manual' ? <Bug className="w-3 h-3 mr-1" /> : <Code className="w-3 h-3 mr-1" />}
-                      {challenge.type}
                     </Badge>
                   </div>
                 </CardHeader>
