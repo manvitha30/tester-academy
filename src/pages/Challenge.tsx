@@ -87,138 +87,140 @@ const Challenge = () => {
     <div className="min-h-screen bg-gray-50 flex">
       <DashboardSidebar />
       
-      <div className="flex-1 p-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="mb-6">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/dashboard')}
-              className="mb-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Button>
-            
-            <div className="flex items-start justify-between mb-4">
-              <h1 className="text-3xl font-bold text-gray-900">{challenge.title}</h1>
-              <div className="flex gap-2">
-                <Badge className={getDifficultyColor(challenge.difficulty)}>
-                  {challenge.difficulty}
-                </Badge>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 p-6 overflow-auto">
+          <div className="max-w-6xl mx-auto h-full flex flex-col">
+            {/* Header */}
+            <div className="mb-6 flex-shrink-0">
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/dashboard')}
+                className="mb-4"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Dashboard
+              </Button>
+              
+              <div className="flex items-start justify-between mb-4">
+                <h1 className="text-3xl font-bold text-gray-900">{challenge.title}</h1>
+                <div className="flex gap-2">
+                  <Badge className={getDifficultyColor(challenge.difficulty)}>
+                    {challenge.difficulty}
+                  </Badge>
+                </div>
+              </div>
+              
+              <p className="text-gray-600 mb-4">{challenge.description}</p>
+              
+              <div className="flex items-center gap-4 mb-4">
+                <span className="text-sm text-gray-500">Points: {challenge.points}</span>
+                {challenge.app_url && (
+                  <a
+                    href={challenge.app_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Open Test Application
+                  </a>
+                )}
+              </div>
+              
+              <div className="flex flex-wrap gap-1">
+                {challenge.tags.map((tag, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
               </div>
             </div>
-            
-            <p className="text-gray-600 mb-4">{challenge.description}</p>
-            
-            <div className="flex items-center gap-4 mb-4">
-              <span className="text-sm text-gray-500">Points: {challenge.points}</span>
-              {challenge.app_url && (
-                <a
-                  href={challenge.app_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Open Test Application
-                </a>
-              )}
-            </div>
-            
-            <div className="flex flex-wrap gap-1">
-              {challenge.tags.map((tag, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </div>
 
-          {/* Instructions */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Instructions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <pre className="whitespace-pre-wrap text-sm text-gray-700">
-                {challenge.instructions}
-              </pre>
-            </CardContent>
-          </Card>
-
-          {/* Test Mode Toggle */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Choose Test Type
-                <ToggleGroup type="single" value={testMode} onValueChange={(value) => value && setTestMode(value as 'manual' | 'automation')}>
-                  <ToggleGroupItem value="manual" aria-label="Manual Testing">
-                    <Bug className="w-4 h-4 mr-2" />
-                    Manual Testing
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="automation" aria-label="Automation Testing">
-                    <Code className="w-4 h-4 mr-2" />
-                    Automation Testing
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {testMode === 'manual' ? (
-                <ManualTestEditor />
-              ) : (
-                <AutomationCodeEditor />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={() => setShowHint(true)}
-              className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
-            >
-              <Lightbulb className="w-4 h-4 mr-2" />
-              Get Hint (-5 points)
-            </Button>
-            
-            <div className="flex gap-3">
-              {testMode === 'automation' && (
-                <Button variant="outline">
-                  Run Code
-                </Button>
-              )}
-              <Button onClick={handleSubmit}>
-                Submit Solution
-              </Button>
-            </div>
-          </div>
-
-          {/* Hint */}
-          {showHint && (
-            <Card className="mt-6 border-yellow-200 bg-yellow-50">
+            {/* Instructions */}
+            <Card className="mb-6 flex-shrink-0">
               <CardHeader>
-                <CardTitle className="text-yellow-800">💡 Hint</CardTitle>
+                <CardTitle>Instructions</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-yellow-700">
-                  Start with the happy path - test a successful login first. Then think about what could go wrong: empty fields, wrong credentials, etc.
-                </p>
+                <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                  {challenge.instructions}
+                </pre>
               </CardContent>
             </Card>
-          )}
 
-          {/* Feedback Area */}
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Feedback</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-500 italic">Submit your solution to see detailed feedback and scoring.</p>
-            </CardContent>
-          </Card>
+            {/* Test Mode Toggle and Editor */}
+            <Card className="flex-1 flex flex-col mb-6">
+              <CardHeader className="flex-shrink-0">
+                <CardTitle className="flex items-center justify-between">
+                  Choose Test Type
+                  <ToggleGroup type="single" value={testMode} onValueChange={(value) => value && setTestMode(value as 'manual' | 'automation')}>
+                    <ToggleGroupItem value="manual" aria-label="Manual Testing">
+                      <Bug className="w-4 h-4 mr-2" />
+                      Manual Testing
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="automation" aria-label="Automation Testing">
+                      <Code className="w-4 h-4 mr-2" />
+                      Automation Testing
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col">
+                {testMode === 'manual' ? (
+                  <ManualTestEditor />
+                ) : (
+                  <AutomationCodeEditor />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Actions */}
+            <div className="flex items-center justify-between flex-shrink-0">
+              <Button
+                variant="outline"
+                onClick={() => setShowHint(true)}
+                className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
+              >
+                <Lightbulb className="w-4 h-4 mr-2" />
+                Get Hint (-5 points)
+              </Button>
+              
+              <div className="flex gap-3">
+                {testMode === 'automation' && (
+                  <Button variant="outline">
+                    Run Code
+                  </Button>
+                )}
+                <Button onClick={handleSubmit}>
+                  Submit Solution
+                </Button>
+              </div>
+            </div>
+
+            {/* Hint */}
+            {showHint && (
+              <Card className="mt-6 border-yellow-200 bg-yellow-50 flex-shrink-0">
+                <CardHeader>
+                  <CardTitle className="text-yellow-800">💡 Hint</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-yellow-700">
+                    Start with the happy path - test a successful login first. Then think about what could go wrong: empty fields, wrong credentials, etc.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Feedback Area */}
+            <Card className="mt-6 flex-shrink-0">
+              <CardHeader>
+                <CardTitle>Feedback</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-500 italic">Submit your solution to see detailed feedback and scoring.</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

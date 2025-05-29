@@ -75,8 +75,8 @@ const ManualTestEditor = () => {
   };
 
   return (
-    <div className="space-y-4 max-h-[calc(100vh-400px)] overflow-auto">
-      <div className="flex justify-between items-center sticky top-0 bg-white z-10 py-2">
+    <div className="h-full flex flex-col">
+      <div className="flex justify-between items-center py-2 mb-4">
         <h3 className="text-lg font-semibold">Manual Test Cases</h3>
         <Button onClick={addTestCase} size="sm">
           <Plus className="w-4 h-4 mr-2" />
@@ -84,10 +84,10 @@ const ManualTestEditor = () => {
         </Button>
       </div>
       
-      <div className="border rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="flex-1 border rounded-lg overflow-hidden">
+        <div className="h-full overflow-auto">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-white z-10">
               <TableRow>
                 <TableHead className="min-w-[120px]">Test Case ID</TableHead>
                 <TableHead className="min-w-[200px]">Title</TableHead>
