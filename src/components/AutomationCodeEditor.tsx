@@ -21,186 +21,29 @@ const AutomationCodeEditor = () => {
       id: 'java',
       name: 'Java (Selenium)',
       extension: 'java',
-      template: `import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.junit.Test;
-import static org.junit.Assert.*;
-
-public class LoginTest {
-    
-    @Test
-    public void testValidLogin() {
-        WebDriver driver = new ChromeDriver();
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        
-        try {
-            // Navigate to login page
-            driver.get("https://demo-shop.example.com/login");
-            
-            // Find and fill username field
-            WebElement usernameField = wait.until(
-                ExpectedConditions.presenceOfElementLocated(By.id("username"))
-            );
-            usernameField.sendKeys("testuser@example.com");
-            
-            // Find and fill password field
-            WebElement passwordField = driver.findElement(By.id("password"));
-            passwordField.sendKeys("Password123!");
-            
-            // Click login button
-            WebElement loginButton = driver.findElement(By.id("login-btn"));
-            loginButton.click();
-            
-            // Verify successful login
-            WebElement dashboard = wait.until(
-                ExpectedConditions.presenceOfElementLocated(By.className("dashboard"))
-            );
-            assertTrue("Dashboard should be visible after login", dashboard.isDisplayed());
-            
-        } finally {
-            driver.quit();
-        }
-    }
-}`
+      template: `// Write your Java Selenium test code here
+// Example: WebDriver driver = new ChromeDriver();`
     },
     {
       id: 'python',
       name: 'Python (Selenium)',
       extension: 'py',
-      template: `from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import unittest
-
-class LoginTest(unittest.TestCase):
-    
-    def setUp(self):
-        self.driver = webdriver.Chrome()
-        self.wait = WebDriverWait(self.driver, 10)
-    
-    def test_valid_login(self):
-        driver = self.driver
-        wait = self.wait
-        
-        # Navigate to login page
-        driver.get("https://demo-shop.example.com/login")
-        
-        # Find and fill username field
-        username_field = wait.until(
-            EC.presence_of_element_located((By.ID, "username"))
-        )
-        username_field.send_keys("testuser@example.com")
-        
-        # Find and fill password field
-        password_field = driver.find_element(By.ID, "password")
-        password_field.send_keys("Password123!")
-        
-        # Click login button
-        login_button = driver.find_element(By.ID, "login-btn")
-        login_button.click()
-        
-        # Verify successful login
-        dashboard = wait.until(
-            EC.presence_of_element_located((By.CLASS_NAME, "dashboard"))
-        )
-        self.assertTrue(dashboard.is_displayed(), "Dashboard should be visible after login")
-    
-    def tearDown(self):
-        self.driver.quit()
-
-if __name__ == "__main__":
-    unittest.main()`
+      template: `# Write your Python Selenium test code here
+# Example: driver = webdriver.Chrome()`
     },
     {
       id: 'javascript',
       name: 'JavaScript (WebDriverIO)',
       extension: 'js',
-      template: `const { expect } = require('@wdio/globals')
-
-describe('Login Test', () => {
-    it('should login with valid credentials', async () => {
-        // Navigate to login page
-        await browser.url('https://demo-shop.example.com/login')
-        
-        // Find and fill username field
-        const usernameField = await $('#username')
-        await usernameField.waitForDisplayed()
-        await usernameField.setValue('testuser@example.com')
-        
-        // Find and fill password field
-        const passwordField = await $('#password')
-        await passwordField.setValue('Password123!')
-        
-        // Click login button
-        const loginButton = await $('#login-btn')
-        await loginButton.click()
-        
-        // Verify successful login
-        const dashboard = await $('.dashboard')
-        await dashboard.waitForDisplayed()
-        expect(dashboard).toBeDisplayed()
-    })
-})`
+      template: `// Write your JavaScript WebDriverIO test code here
+// Example: await browser.url('https://example.com')`
     },
     {
       id: 'csharp',
       name: 'C# (Selenium)',
       extension: 'cs',
-      template: `using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.UI;
-using NUnit.Framework;
-using System;
-
-[TestFixture]
-public class LoginTest
-{
-    private IWebDriver driver;
-    private WebDriverWait wait;
-    
-    [SetUp]
-    public void Setup()
-    {
-        driver = new ChromeDriver();
-        wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
-    }
-    
-    [Test]
-    public void TestValidLogin()
-    {
-        // Navigate to login page
-        driver.Navigate().GoToUrl("https://demo-shop.example.com/login");
-        
-        // Find and fill username field
-        IWebElement usernameField = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions
-            .ElementIsVisible(By.Id("username")));
-        usernameField.SendKeys("testuser@example.com");
-        
-        // Find and fill password field
-        IWebElement passwordField = driver.FindElement(By.Id("password"));
-        passwordField.SendKeys("Password123!");
-        
-        // Click login button
-        IWebElement loginButton = driver.FindElement(By.Id("login-btn"));
-        loginButton.Click();
-        
-        // Verify successful login
-        IWebElement dashboard = wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions
-            .ElementIsVisible(By.ClassName("dashboard")));
-        Assert.IsTrue(dashboard.Displayed, "Dashboard should be visible after login");
-    }
-    
-    [TearDown]
-    public void TearDown()
-    {
-        driver?.Quit();
-    }
-}`
+      template: `// Write your C# Selenium test code here
+// Example: IWebDriver driver = new ChromeDriver();`
     }
   ];
 

@@ -75,8 +75,8 @@ const ManualTestEditor = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 max-h-[calc(100vh-400px)] overflow-auto">
+      <div className="flex justify-between items-center sticky top-0 bg-white z-10 py-2">
         <h3 className="text-lg font-semibold">Manual Test Cases</h3>
         <Button onClick={addTestCase} size="sm">
           <Plus className="w-4 h-4 mr-2" />
@@ -89,20 +89,20 @@ const ManualTestEditor = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">Test Case ID</TableHead>
-                <TableHead className="w-[200px]">Title</TableHead>
-                <TableHead className="w-[120px]">Module</TableHead>
-                <TableHead className="w-[180px]">Preconditions</TableHead>
-                <TableHead className="w-[250px]">Test Steps</TableHead>
-                <TableHead className="w-[180px]">Test Data</TableHead>
-                <TableHead className="w-[200px]">Expected Result</TableHead>
-                <TableHead className="w-[200px]">Actual Result</TableHead>
-                <TableHead className="w-[120px]">Status</TableHead>
-                <TableHead className="w-[100px]">Severity</TableHead>
-                <TableHead className="w-[120px]">Executed By</TableHead>
-                <TableHead className="w-[120px]">Execution Date</TableHead>
-                <TableHead className="w-[180px]">Comments</TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
+                <TableHead className="min-w-[120px]">Test Case ID</TableHead>
+                <TableHead className="min-w-[200px]">Title</TableHead>
+                <TableHead className="min-w-[120px]">Module</TableHead>
+                <TableHead className="min-w-[200px]">Preconditions</TableHead>
+                <TableHead className="min-w-[300px]">Test Steps</TableHead>
+                <TableHead className="min-w-[200px]">Test Data</TableHead>
+                <TableHead className="min-w-[250px]">Expected Result</TableHead>
+                <TableHead className="min-w-[250px]">Actual Result</TableHead>
+                <TableHead className="min-w-[120px]">Status</TableHead>
+                <TableHead className="min-w-[100px]">Severity</TableHead>
+                <TableHead className="min-w-[150px]">Executed By</TableHead>
+                <TableHead className="min-w-[140px]">Execution Date</TableHead>
+                <TableHead className="min-w-[200px]">Comments</TableHead>
+                <TableHead className="min-w-[80px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -112,15 +112,15 @@ const ManualTestEditor = () => {
                     <Input
                       value={testCase.testCaseId}
                       onChange={(e) => updateTestCase(testCase.id, 'testCaseId', e.target.value)}
-                      className="w-full"
+                      className="min-w-[110px]"
                     />
                   </TableCell>
                   <TableCell>
-                    <Input
+                    <Textarea
                       value={testCase.title}
                       onChange={(e) => updateTestCase(testCase.id, 'title', e.target.value)}
                       placeholder="Test case title"
-                      className="w-full"
+                      className="min-w-[180px] min-h-[80px] resize-none"
                     />
                   </TableCell>
                   <TableCell>
@@ -128,7 +128,7 @@ const ManualTestEditor = () => {
                       value={testCase.module}
                       onChange={(e) => updateTestCase(testCase.id, 'module', e.target.value)}
                       placeholder="Feature/Module"
-                      className="w-full"
+                      className="min-w-[110px]"
                     />
                   </TableCell>
                   <TableCell>
@@ -136,7 +136,7 @@ const ManualTestEditor = () => {
                       value={testCase.preconditions}
                       onChange={(e) => updateTestCase(testCase.id, 'preconditions', e.target.value)}
                       placeholder="Preconditions"
-                      className="w-full min-h-[60px] resize-none"
+                      className="min-w-[180px] min-h-[80px] resize-none"
                     />
                   </TableCell>
                   <TableCell>
@@ -144,7 +144,7 @@ const ManualTestEditor = () => {
                       value={testCase.testSteps}
                       onChange={(e) => updateTestCase(testCase.id, 'testSteps', e.target.value)}
                       placeholder="Test steps"
-                      className="w-full min-h-[80px] resize-none"
+                      className="min-w-[280px] min-h-[100px] resize-none"
                     />
                   </TableCell>
                   <TableCell>
@@ -152,7 +152,7 @@ const ManualTestEditor = () => {
                       value={testCase.testData}
                       onChange={(e) => updateTestCase(testCase.id, 'testData', e.target.value)}
                       placeholder="Test data"
-                      className="w-full min-h-[60px] resize-none"
+                      className="min-w-[180px] min-h-[80px] resize-none"
                     />
                   </TableCell>
                   <TableCell>
@@ -160,7 +160,7 @@ const ManualTestEditor = () => {
                       value={testCase.expectedResult}
                       onChange={(e) => updateTestCase(testCase.id, 'expectedResult', e.target.value)}
                       placeholder="Expected result"
-                      className="w-full min-h-[60px] resize-none"
+                      className="min-w-[230px] min-h-[80px] resize-none"
                     />
                   </TableCell>
                   <TableCell>
@@ -168,7 +168,7 @@ const ManualTestEditor = () => {
                       value={testCase.actualResult}
                       onChange={(e) => updateTestCase(testCase.id, 'actualResult', e.target.value)}
                       placeholder="Actual result"
-                      className="w-full min-h-[60px] resize-none"
+                      className="min-w-[230px] min-h-[80px] resize-none"
                     />
                   </TableCell>
                   <TableCell>
@@ -176,7 +176,7 @@ const ManualTestEditor = () => {
                       value={testCase.status}
                       onValueChange={(value) => updateTestCase(testCase.id, 'status', value)}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="min-w-[110px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -191,7 +191,7 @@ const ManualTestEditor = () => {
                       value={testCase.severity}
                       onValueChange={(value) => updateTestCase(testCase.id, 'severity', value)}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="min-w-[90px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -207,7 +207,7 @@ const ManualTestEditor = () => {
                       value={testCase.executedBy}
                       onChange={(e) => updateTestCase(testCase.id, 'executedBy', e.target.value)}
                       placeholder="Tester name"
-                      className="w-full"
+                      className="min-w-[130px]"
                     />
                   </TableCell>
                   <TableCell>
@@ -215,7 +215,7 @@ const ManualTestEditor = () => {
                       type="date"
                       value={testCase.executionDate}
                       onChange={(e) => updateTestCase(testCase.id, 'executionDate', e.target.value)}
-                      className="w-full"
+                      className="min-w-[130px]"
                     />
                   </TableCell>
                   <TableCell>
@@ -223,7 +223,7 @@ const ManualTestEditor = () => {
                       value={testCase.comments}
                       onChange={(e) => updateTestCase(testCase.id, 'comments', e.target.value)}
                       placeholder="Comments/Notes"
-                      className="w-full min-h-[60px] resize-none"
+                      className="min-w-[180px] min-h-[80px] resize-none"
                     />
                   </TableCell>
                   <TableCell>
