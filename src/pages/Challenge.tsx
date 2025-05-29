@@ -8,13 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, ExternalLink, Lightbulb, Code, Bug } from 'lucide-react';
 import DashboardSidebar from '@/components/DashboardSidebar';
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import ManualTestEditor from '@/components/ManualTestEditor';
+import AutomationCodeEditor from '@/components/AutomationCodeEditor';
 
 interface Challenge {
   id: string;
   title: string;
   description: string;
   difficulty: 'easy' | 'medium' | 'hard';
-  type: 'manual' | 'automation';
   tags: string[];
   points: number;
   app_url?: string;
@@ -26,8 +28,7 @@ const Challenge = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
-  const [testCases, setTestCases] = useState('');
-  const [code, setCode] = useState('');
+  const [testMode, setTestMode] = useState<'manual' | 'automation'>('manual');
   const [showHint, setShowHint] = useState(false);
 
   useEffect(() => {
@@ -45,7 +46,6 @@ const Challenge = () => {
       title: 'E-commerce Login Testing',
       description: 'Test the login functionality of an e-commerce application. Focus on both positive and negative test scenarios.',
       difficulty: 'easy',
-      type: 'manual',
       tags: ['Login', 'Authentication', 'E-commerce'],
       points: 50,
       app_url: 'https://demo-shop.example.com',
@@ -67,7 +67,7 @@ const Challenge = () => {
 
   const handleSubmit = () => {
     // Handle submission logic
-    console.log('Submitting:', challenge?.type === 'manual' ? testCases : code);
+    console.log('Submitting:', testMode, 'solution');
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -88,7 +88,7 @@ const Challenge = () => {
       <DashboardSidebar />
       
       <div className="flex-1 p-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-6">
             <Button
@@ -105,10 +105,6 @@ const Challenge = () => {
               <div className="flex gap-2">
                 <Badge className={getDifficultyColor(challenge.difficulty)}>
                   {challenge.difficulty}
-                </Badge>
-                <Badge variant="outline">
-                  {challenge.type === 'manual' ? <Bug className="w-3 h-3 mr-1" /> : <Code className="w-3 h-3 mr-1" />}
-                  {challenge.type}
                 </Badge>
               </div>
             </div>
@@ -151,41 +147,28 @@ const Challenge = () => {
             </CardContent>
           </Card>
 
-          {/* Challenge Input */}
+          {/* Test Mode Toggle */}
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>
-                {challenge.type === 'manual' ? 'Write Your Test Cases' : 'Write Your Automation Code'}
+              <CardTitle className="flex items-center justify-between">
+                Choose Test Type
+                <ToggleGroup type="single" value={testMode} onValueChange={(value) => value && setTestMode(value as 'manual' | 'automation')}>
+                  <ToggleGroupItem value="manual" aria-label="Manual Testing">
+                    <Bug className="w-4 h-4 mr-2" />
+                    Manual Testing
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="automation" aria-label="Automation Testing">
+                    <Code className="w-4 h-4 mr-2" />
+                    Automation Testing
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {challenge.type === 'manual' ? (
-                <Textarea
-                  placeholder="Write your test cases here... Include test steps, expected results, and any additional notes."
-                  value={testCases}
-                  onChange={(e) => setTestCases(e.target.value)}
-                  className="min-h-[300px]"
-                />
+              {testMode === 'manual' ? (
+                <ManualTestEditor />
               ) : (
-                <div className="border rounded-md">
-                  <div className="bg-gray-50 px-3 py-2 border-b text-sm text-gray-600">
-                    Java (Selenium WebDriver)
-                  </div>
-                  <Textarea
-                    placeholder="// Write your Selenium automation code here...
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-
-public class LoginTest {
-    public static void main(String[] args) {
-        // Your code here
-    }
-}"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    className="min-h-[400px] border-0 rounded-none font-mono text-sm"
-                  />
-                </div>
+                <AutomationCodeEditor />
               )}
             </CardContent>
           </Card>
@@ -202,7 +185,7 @@ public class LoginTest {
             </Button>
             
             <div className="flex gap-3">
-              {challenge.type === 'automation' && (
+              {testMode === 'automation' && (
                 <Button variant="outline">
                   Run Code
                 </Button>
