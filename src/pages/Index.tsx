@@ -1,97 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Target, Users, Code, Bug, Trophy, Star, ArrowRight, Mail, Linkedin, Twitter, LogOut, User } from 'lucide-react';
+import { CheckCircle, Target, Users, Code, Bug, Trophy, Star, ArrowRight, Mail, Linkedin, Twitter, LogOut, User, Play, Check, Zap, Crown } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const [email, setEmail] = useState('');
   const [isVisible, setIsVisible] = useState(false);
-  const [signupCount, setSignupCount] = useState(42);
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     setIsVisible(true);
-    fetchSignupCount();
     
     // Redirect authenticated users to dashboard
     if (user && !loading) {
       navigate('/dashboard');
     }
   }, [user, loading, navigate]);
-
-  const fetchSignupCount = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('email_signups')
-        .select('signup_number', { count: 'exact' });
-      
-      if (!error && data) {
-        setSignupCount(data.length + 42); // Adding base count for social proof
-      }
-    } catch (error) {
-      console.log('Error fetching signup count:', error);
-    }
-  };
-
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) {
-      toast({
-        title: "Please enter your email",
-        description: "We need your email to send you early access updates.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase.rpc('handle_email_signup', {
-        user_email: email
-      });
-
-      if (error) {
-        if (error.message.includes('duplicate key value')) {
-          toast({
-            title: "Already signed up!",
-            description: "This email is already on our waitlist.",
-            variant: "destructive"
-          });
-        } else {
-          throw error;
-        }
-        return;
-      }
-
-      const signupData = data[0];
-      setSignupCount(prev => prev + 1);
-      
-      if (signupData.gets_early_access) {
-        toast({
-          title: "🎉 Congratulations!",
-          description: `You're #${signupData.signup_num} on the waitlist and qualify for FREE premium access!`,
-        });
-      } else {
-        toast({
-          title: "🎉 Welcome to the waitlist!",
-          description: "You're in! We'll notify you when early access opens.",
-        });
-      }
-      setEmail('');
-    } catch (error) {
-      toast({
-        title: "Something went wrong",
-        description: "Please try again later.",
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleSignOut = async () => {
     try {
@@ -160,6 +88,54 @@ const Index = () => {
     "📋 Resume-worthy QA artifacts (PDF-ready)"
   ];
 
+  const pricingPlans = [
+    {
+      name: "Starter",
+      price: "Free",
+      description: "Perfect for getting started",
+      features: [
+        "5 challenges per month",
+        "Basic feedback",
+        "Community access",
+        "Basic portfolio"
+      ],
+      icon: <Zap className="w-6 h-6" />,
+      popular: false
+    },
+    {
+      name: "Pro",
+      price: "$19",
+      period: "/month",
+      description: "For serious learners",
+      features: [
+        "Unlimited challenges",
+        "AI-powered detailed feedback",
+        "Priority support",
+        "Advanced portfolio",
+        "Certificate of completion",
+        "Job placement assistance"
+      ],
+      icon: <Crown className="w-6 h-6" />,
+      popular: true
+    },
+    {
+      name: "Team",
+      price: "$49",
+      period: "/month",
+      description: "For organizations",
+      features: [
+        "Everything in Pro",
+        "Team management",
+        "Custom challenges",
+        "Analytics dashboard",
+        "Dedicated support",
+        "Bulk certificates"
+      ],
+      icon: <Users className="w-6 h-6" />,
+      popular: false
+    }
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 flex items-center justify-center">
@@ -174,108 +150,137 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       {/* Navigation Bar */}
-      {user && (
-        <nav className="bg-white/80 backdrop-blur-sm border-b border-purple-100 sticky top-0 z-50">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Target className="w-6 h-6 text-purple-600" />
-              <span className="font-bold text-gray-900">Tester Academy</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <User className="w-4 h-4" />
-                {user.email}
-              </div>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
+      <nav className="bg-white/80 backdrop-blur-sm border-b border-purple-100 sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Target className="w-6 h-6 text-purple-600" />
+            <span className="font-bold text-gray-900">Tester Academy</span>
           </div>
-        </nav>
-      )}
+          <div className="flex items-center gap-4">
+            {user ? (
+              <>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <User className="w-4 h-4" />
+                  {user.email}
+                </div>
+                <Button variant="outline" size="sm" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => navigate('/auth')}>
+                  Sign In
+                </Button>
+                <Button 
+                  onClick={() => navigate('/auth')}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </nav>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 px-4">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-blue-600/10"></div>
         <div className={`max-w-6xl mx-auto text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <Badge className="mb-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 text-sm font-medium animate-pulse">
-            🔥 Early Access - First 50 get Premium FREE
+            🔥 Limited Time - First 100 users get 30% off Pro plan
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-6 leading-tight">
-            Learn QA Testing Through Challenges
+            Master QA Testing Through Real Challenges
           </h1>
           
           <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-4xl mx-auto leading-relaxed">
-            Master Manual Testing & Selenium with Java by solving real-world QA challenges.<br />
-            <span className="font-semibold text-purple-600">Get job-ready through practice—not PDFs.</span>
+            Learn Manual Testing & Selenium with Java by solving real-world QA challenges.<br />
+            <span className="font-semibold text-purple-600">Get job-ready through practice—not theory.</span>
           </p>
 
-          {!user ? (
-            <>
-              <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto mb-8">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 h-12 text-lg border-2 border-purple-200 focus:border-purple-500"
-                />
-                <Button 
-                  type="submit"
-                  className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
-                >
-                  Join Waitlist <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </form>
-              
-              <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 mb-6">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  No spam, just skill
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Free early access
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Premium credits included
-                </div>
-              </div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <Button 
+              onClick={() => navigate('/auth')}
+              className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+            >
+              Start Learning Free <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+            <Button 
+              variant="outline"
+              className="h-12 px-8 border-purple-200 text-purple-600 hover:bg-purple-50"
+            >
+              <Play className="mr-2 w-4 h-4" />
+              Watch Demo
+            </Button>
+          </div>
 
-              <div className="mb-8">
-                <p className="text-sm text-gray-600 mb-4">
-                  <span className="font-semibold text-purple-600">{signupCount}</span> testers already joined
-                </p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate('/auth')}
-                  className="border-purple-200 text-purple-600 hover:bg-purple-50"
-                >
-                  Already have an account? Sign In
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="mb-8">
-              <p className="text-xl text-gray-700 mb-6">
-                Welcome back! Your QA learning journey continues here.
-              </p>
-              <Button 
-                onClick={() => navigate('/dashboard')}
-                className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
-              >
-                Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              No credit card required
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              Start learning immediately
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              Built by QA experts
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Demo Video Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              See Tester Academy in Action
+            </h2>
+            <p className="text-xl text-gray-600">
+              Watch how real QA professionals use our platform to level up their skills
+            </p>
+          </div>
+          
+          <div className="relative bg-gradient-to-br from-purple-100 to-blue-100 rounded-2xl p-8 shadow-xl">
+            <div className="aspect-video bg-gray-900 rounded-xl flex items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-blue-600/20"></div>
+              <Button 
+                size="lg"
+                className="relative z-10 bg-white text-gray-900 hover:bg-gray-100 rounded-full w-20 h-20 p-0"
+              >
+                <Play className="w-8 h-8 ml-1" />
+              </Button>
+              <div className="absolute bottom-4 left-4 text-white">
+                <p className="text-sm opacity-80">Demo: Testing a Login System</p>
+                <p className="text-xs opacity-60">2:34 mins</p>
+              </div>
+            </div>
+            <div className="mt-6 grid md:grid-cols-3 gap-4 text-center">
+              <div className="p-4">
+                <div className="text-2xl font-bold text-purple-600">5min</div>
+                <div className="text-sm text-gray-600">Average challenge time</div>
+              </div>
+              <div className="p-4">
+                <div className="text-2xl font-bold text-blue-600">98%</div>
+                <div className="text-sm text-gray-600">User satisfaction rate</div>
+              </div>
+              <div className="p-4">
+                <div className="text-2xl font-bold text-green-600">2x</div>
+                <div className="text-sm text-gray-600">Faster skill development</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-20 px-4 bg-gradient-to-r from-purple-50 to-blue-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
@@ -296,6 +301,62 @@ const Index = () => {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{feature.title}</h3>
                   <p className="text-gray-600">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Choose Your Learning Path
+            </h2>
+            <p className="text-xl text-gray-600">
+              Start free and upgrade when you're ready to accelerate your QA career
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {pricingPlans.map((plan, index) => (
+              <Card key={index} className={`relative ${plan.popular ? 'ring-2 ring-purple-500 shadow-xl scale-105' : 'shadow-lg'} hover:shadow-xl transition-all duration-300`}>
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-1">
+                      Most Popular
+                    </Badge>
+                  </div>
+                )}
+                <CardHeader className="text-center">
+                  <div className={`w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center ${plan.popular ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                    {plan.icon}
+                  </div>
+                  <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
+                  <div className="text-3xl font-bold text-gray-900">
+                    {plan.price}
+                    {plan.period && <span className="text-lg text-gray-600">{plan.period}</span>}
+                  </div>
+                  <p className="text-gray-600">{plan.description}</p>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 mb-6">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center gap-3">
+                        <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                        <span className="text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button 
+                    className={`w-full ${plan.popular ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700' : 'border border-gray-300 bg-white text-gray-900 hover:bg-gray-50'}`}
+                    variant={plan.popular ? "default" : "outline"}
+                    onClick={() => navigate('/auth')}
+                  >
+                    {plan.name === 'Starter' ? 'Start Free' : 'Get Started'}
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -401,91 +462,31 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Urgency Section */}
+      {/* Final CTA */}
       <section className="py-20 px-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6">🕒 Limited Early Access – Join Before We Launch</h2>
-          
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6">
-              <CheckCircle className="w-8 h-8 mx-auto mb-3" />
-              <h3 className="font-bold mb-2">Free 30-day Premium Pass</h3>
-            </div>
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6">
-              <CheckCircle className="w-8 h-8 mx-auto mb-3" />
-              <h3 className="font-bold mb-2">Bonus credits for challenges</h3>
-            </div>
-            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6">
-              <CheckCircle className="w-8 h-8 mx-auto mb-3" />
-              <h3 className="font-bold mb-2">Priority access to new features</h3>
-            </div>
-          </div>
-          
-          <p className="text-xl mb-8">👉 Don't just watch others test. Become the tester companies want.</p>
-          
-          {!user ? (
-            <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 h-12 text-lg bg-white/20 border-white/30 text-white placeholder:text-white/70 focus:bg-white/30"
-              />
-              <Button 
-                type="submit"
-                className="h-12 px-8 bg-white text-purple-600 hover:bg-gray-100 font-semibold transition-all duration-300 transform hover:scale-105"
-              >
-                Join Waitlist <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
-            </form>
-          ) : (
-            <Button 
-              onClick={() => navigate('/dashboard')}
-              className="h-12 px-8 bg-white text-purple-600 hover:bg-gray-100 font-semibold transition-all duration-300 transform hover:scale-105"
-            >
-              Go to Dashboard <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          )}
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-20 px-4 bg-gray-900 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6">Ready to Learn QA Like a Pro?</h2>
-          <p className="text-xl mb-8 text-gray-300">
-            Start your journey with hands-on, challenge-based learning.
+          <h2 className="text-4xl font-bold mb-6">Ready to Transform Your QA Career?</h2>
+          <p className="text-xl mb-8 text-purple-100">
+            Join thousands of testers who've accelerated their careers with hands-on practice
           </p>
           
-          {!user ? (
-            <>
-              <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto mb-8">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 h-12 text-lg bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:border-purple-500"
-                />
-                <Button 
-                  type="submit"
-                  className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
-                >
-                  Join the Waitlist – It's Free
-                </Button>
-              </form>
-              
-              <p className="text-gray-400">No spam. Just skill.</p>
-            </>
-          ) : (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
-              onClick={() => navigate('/dashboard')}
-              className="h-12 px-8 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105"
+              onClick={() => navigate('/auth')}
+              className="h-12 px-8 bg-white text-purple-600 hover:bg-gray-100 font-semibold transition-all duration-300 transform hover:scale-105"
             >
-              Continue Your Journey
+              Start Learning Free <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
-          )}
+            <Button 
+              variant="outline"
+              className="h-12 px-8 border-white text-white hover:bg-white/10"
+            >
+              <Play className="mr-2 w-4 h-4" />
+              Watch Demo
+            </Button>
+          </div>
+          
+          <p className="mt-6 text-purple-200 text-sm">No spam. No long courses. Just skills that get you hired.</p>
         </div>
       </section>
 
