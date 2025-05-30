@@ -29,14 +29,14 @@ export const submitChallenge = async (data: SubmissionData) => {
     throw new Error('User not authenticated');
   }
 
-  // Submit to database
+  // Submit to database with proper type casting
   const { data: submission, error } = await supabase
     .from('challenge_submissions')
     .insert({
       user_id: user.user.id,
       challenge_id: data.challengeId,
       submission_type: data.submissionType,
-      content: data.content,
+      content: data.content as any, // Cast to any to match Json type
       status: 'pending'
     })
     .select()
