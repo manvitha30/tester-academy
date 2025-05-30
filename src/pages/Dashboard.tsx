@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from 'react-router-dom';
-import { Target, Trophy, Code, Bug, Filter, ChevronRight } from 'lucide-react';
+import { Target, Trophy, Code, Bug, Filter, ChevronRight, ExternalLink } from 'lucide-react';
 import DashboardSidebar from '@/components/DashboardSidebar';
 
 interface Challenge {
@@ -17,13 +17,20 @@ interface Challenge {
   type: 'manual' | 'automation';
   tags: string[];
   points: number;
-  app_url?: string;
+}
+
+interface Application {
+  id: string;
+  name: string;
+  description: string;
+  url: string;
+  challenges: Challenge[];
 }
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -32,7 +39,7 @@ const Dashboard = () => {
       return;
     }
     fetchUserProfile();
-    fetchChallenges();
+    fetchApplications();
   }, [user, navigate]);
 
   const fetchUserProfile = async () => {
@@ -49,39 +56,107 @@ const Dashboard = () => {
     }
   };
 
-  const fetchChallenges = async () => {
-    // Mock data for now - will be replaced with real Supabase data
-    const mockChallenges: Challenge[] = [
+  const fetchApplications = async () => {
+    // Mock data organized by applications
+    const mockApplications: Application[] = [
       {
-        id: '1',
-        title: 'E-commerce Login Testing',
-        description: 'Test the login functionality of an e-commerce application',
-        difficulty: 'easy',
-        type: 'manual',
-        tags: ['Login', 'Authentication', 'E-commerce'],
-        points: 50,
-        app_url: 'https://demo-shop.example.com'
+        id: 'owasp-juice-shop',
+        name: 'OWASP Juice Shop',
+        description: 'An intentionally insecure web application for security training',
+        url: 'https://juice-shop.herokuapp.com',
+        challenges: [
+          {
+            id: 'juice-shop-1',
+            title: 'SQL Injection Discovery',
+            description: 'Find and exploit SQL injection vulnerabilities in the login form',
+            difficulty: 'easy',
+            type: 'manual',
+            tags: ['SQL Injection', 'Security', 'Login'],
+            points: 75
+          },
+          {
+            id: 'juice-shop-2',
+            title: 'XSS Attack Vector',
+            description: 'Identify and demonstrate cross-site scripting vulnerabilities',
+            difficulty: 'medium',
+            type: 'manual',
+            tags: ['XSS', 'Security', 'JavaScript'],
+            points: 100
+          },
+          {
+            id: 'juice-shop-3',
+            title: 'Authentication Bypass',
+            description: 'Test authentication mechanisms and find bypass methods',
+            difficulty: 'hard',
+            type: 'manual',
+            tags: ['Authentication', 'Security', 'Bypass'],
+            points: 150
+          }
+        ]
       },
       {
-        id: '2',
-        title: 'Shopping Cart Automation',
-        description: 'Write Selenium automation for shopping cart functionality',
-        difficulty: 'medium',
-        type: 'automation',
-        tags: ['Cart', 'Selenium', 'Java'],
-        points: 100
+        id: 'orangehrm',
+        name: 'OrangeHRM (Open Source)',
+        description: 'Human Resource Management system for comprehensive HR testing',
+        url: 'https://opensource-demo.orangehrmlive.com',
+        challenges: [
+          {
+            id: 'orangehrm-1',
+            title: 'Employee Management Testing',
+            description: 'Test employee CRUD operations and data validation',
+            difficulty: 'easy',
+            type: 'manual',
+            tags: ['CRUD', 'HR', 'Data Validation'],
+            points: 60
+          },
+          {
+            id: 'orangehrm-2',
+            title: 'Leave Management Automation',
+            description: 'Automate leave request and approval workflow testing',
+            difficulty: 'medium',
+            type: 'automation',
+            tags: ['Workflow', 'Automation', 'Leave Management'],
+            points: 120
+          },
+          {
+            id: 'orangehrm-3',
+            title: 'Payroll System Integration',
+            description: 'Test payroll calculations and report generation',
+            difficulty: 'hard',
+            type: 'manual',
+            tags: ['Payroll', 'Reports', 'Integration'],
+            points: 180
+          }
+        ]
       },
       {
-        id: '3',
-        title: 'Form Validation Testing',
-        description: 'Comprehensive testing of form validation rules',
-        difficulty: 'hard',
-        type: 'manual',
-        tags: ['Forms', 'Validation', 'Edge Cases'],
-        points: 150
+        id: 'spring-petclinic',
+        name: 'Spring PetClinic',
+        description: 'Sample Spring Boot application for veterinary clinic management',
+        url: 'https://petclinic.springframework.org',
+        challenges: [
+          {
+            id: 'petclinic-1',
+            title: 'Pet Registration Flow',
+            description: 'Test the complete pet registration and owner assignment process',
+            difficulty: 'easy',
+            type: 'manual',
+            tags: ['Registration', 'Forms', 'Validation'],
+            points: 50
+          },
+          {
+            id: 'petclinic-2',
+            title: 'Veterinarian Scheduling',
+            description: 'Test appointment scheduling and veterinarian assignment',
+            difficulty: 'medium',
+            type: 'automation',
+            tags: ['Scheduling', 'Calendar', 'Automation'],
+            points: 100
+          }
+        ]
       }
     ];
-    setChallenges(mockChallenges);
+    setApplications(mockApplications);
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -92,6 +167,8 @@ const Dashboard = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const totalChallenges = applications.reduce((total, app) => total + app.challenges.length, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -125,8 +202,8 @@ const Dashboard = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Challenges Completed</p>
-                    <p className="text-2xl font-bold text-blue-600">0</p>
+                    <p className="text-sm text-gray-600">Available Challenges</p>
+                    <p className="text-2xl font-bold text-blue-600">{totalChallenges}</p>
                   </div>
                   <Target className="w-8 h-8 text-blue-600" />
                 </div>
@@ -137,48 +214,92 @@ const Dashboard = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Current Streak</p>
-                    <p className="text-2xl font-bold text-green-600">0</p>
+                    <p className="text-sm text-gray-600">Applications</p>
+                    <p className="text-2xl font-bold text-green-600">{applications.length}</p>
                   </div>
-                  <div className="text-green-600">🔥</div>
+                  <div className="text-green-600">🎯</div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Challenges Section Header */}
+          {/* Applications Section Header */}
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Available Challenges</h2>
-            <p className="text-gray-600">Choose a challenge to start practicing your testing skills</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Testing Applications</h2>
+            <p className="text-gray-600">Choose from real-world applications to practice your testing skills</p>
           </div>
 
-          {/* Challenges Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {challenges.map((challenge) => (
-              <Card key={challenge.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/challenge/${challenge.id}`)}>
-                <CardHeader>
+          {/* Applications Grid */}
+          <div className="space-y-6">
+            {applications.map((app) => (
+              <Card key={app.id} className="overflow-hidden">
+                <CardHeader className="bg-gray-50">
                   <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{challenge.title}</CardTitle>
-                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                    <div>
+                      <CardTitle className="text-xl">{app.name}</CardTitle>
+                      <p className="text-gray-600 mt-1">{app.description}</p>
+                    </div>
+                    <a
+                      href={app.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Open App
+                    </a>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getDifficultyColor(challenge.difficulty)}>
-                      {challenge.difficulty}
+                  <div className="flex items-center gap-2 mt-3">
+                    <Badge variant="secondary">{app.challenges.length} Challenges</Badge>
+                    <Badge variant="outline">
+                      {app.challenges.reduce((total, challenge) => total + challenge.points, 0)} Total Points
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 text-sm mb-4">{challenge.description}</p>
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {challenge.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
+                <CardContent className="p-0">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
+                    {app.challenges.map((challenge) => (
+                      <Card 
+                        key={challenge.id} 
+                        className="hover:shadow-md transition-shadow cursor-pointer border border-gray-200"
+                        onClick={() => navigate(`/challenge/${challenge.id}`)}
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between">
+                            <CardTitle className="text-base">{challenge.title}</CardTitle>
+                            <ChevronRight className="w-4 h-4 text-gray-400 mt-1" />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getDifficultyColor(challenge.difficulty)}>
+                              {challenge.difficulty}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {challenge.type === 'manual' ? <Bug className="w-3 h-3 mr-1" /> : <Code className="w-3 h-3 mr-1" />}
+                              {challenge.type}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p className="text-gray-600 text-sm mb-3">{challenge.description}</p>
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {challenge.tags.slice(0, 2).map((tag, index) => (
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                            {challenge.tags.length > 2 && (
+                              <Badge variant="secondary" className="text-xs">
+                                +{challenge.tags.length - 2}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-500">{challenge.points} points</span>
+                            <Button size="sm">Start</Button>
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Points: {challenge.points}</span>
-                    <Button size="sm">Start Challenge</Button>
                   </div>
                 </CardContent>
               </Card>
