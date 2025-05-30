@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -143,6 +144,12 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Challenges Section Header */}
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Available Challenges</h2>
+            <p className="text-gray-600">Choose a challenge to start practicing your testing skills</p>
           </div>
 
           {/* Challenges Grid */}
