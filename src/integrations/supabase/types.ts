@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      challenge_submissions: {
+        Row: {
+          challenge_id: string
+          content: Json
+          feedback: Json | null
+          id: string
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          score: number | null
+          status: string
+          submission_type: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          content: Json
+          feedback?: Json | null
+          id?: string
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          score?: number | null
+          status?: string
+          submission_type: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          content?: Json
+          feedback?: Json | null
+          id?: string
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          score?: number | null
+          status?: string
+          submission_type?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_signups: {
         Row: {
           created_at: string
@@ -60,6 +102,45 @@ export type Database = {
           is_premium?: boolean
           skill_score?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_challenge_progress: {
+        Row: {
+          attempts: number | null
+          best_score: number | null
+          challenge_id: string
+          completed_at: string | null
+          created_at: string
+          first_attempted_at: string | null
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number | null
+          best_score?: number | null
+          challenge_id: string
+          completed_at?: string | null
+          created_at?: string
+          first_attempted_at?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number | null
+          best_score?: number | null
+          challenge_id?: string
+          completed_at?: string | null
+          created_at?: string
+          first_attempted_at?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

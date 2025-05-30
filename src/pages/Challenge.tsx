@@ -1,16 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, ExternalLink, Lightbulb, Code, Bug } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Lightbulb, Code, Bug, CheckCircle, XCircle, Clock } from 'lucide-react';
 import DashboardSidebar from '@/components/DashboardSidebar';
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import ManualTestEditor from '@/components/ManualTestEditor';
 import AutomationCodeEditor from '@/components/AutomationCodeEditor';
+import { submitChallenge, getUserProgress, getUserSubmissions, type SubmissionData } from '@/services/submissionService';
+import { toast } from "@/hooks/use-toast";
 
 interface Challenge {
   id: string;
@@ -30,6 +30,11 @@ const Challenge = () => {
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [testMode, setTestMode] = useState<'manual' | 'automation'>('manual');
   const [showHint, setShowHint] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userProgress, setUserProgress] = useState<any>(null);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [manualTestCases, setManualTestCases] = useState<any[]>([]);
+  const [automationCode, setAutomationCode] = useState<any>(null);
 
   useEffect(() => {
     if (!user) {
@@ -37,6 +42,8 @@ const Challenge = () => {
       return;
     }
     fetchChallenge();
+    fetchUserProgress();
+    fetchUserSubmissions();
   }, [id, user, navigate]);
 
   const fetchChallenge = async () => {
@@ -65,17 +72,77 @@ const Challenge = () => {
     setChallenge(mockChallenge);
   };
 
-  const handleSubmit = () => {
-    // Handle submission logic
-    console.log('Submitting:', testMode, 'solution');
+  const fetchUserProgress = async () => {
+    if (!id) return;
+    const progress = await getUserProgress(id);
+    setUserProgress(progress);
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'hard': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const fetchUserSubmissions = async () => {
+    if (!id) return;
+    const userSubmissions = await getUserSubmissions(id);
+    setSubmissions(userSubmissions);
+  };
+
+  const handleSubmit = async () => {
+    if (!id || !challenge) return;
+
+    setIsSubmitting(true);
+    try {
+      const submissionData: SubmissionData = {
+        challengeId: id,
+        submissionType: testMode,
+        content: testMode === 'manual' ? manualTestCases : automationCode
+      };
+
+      const result = await submitChallenge(submissionData);
+      
+      toast({
+        title: "Submission successful!",
+        description: "Your challenge submission has been received and is being validated.",
+      });
+
+      // Refresh progress and submissions
+      await fetchUserProgress();
+      await fetchUserSubmissions();
+
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast({
+        title: "Submission failed",
+        description: "There was an error submitting your challenge. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'passed':
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'failed':
+        return <XCircle className="w-4 h-4 text-red-600" />;
+      case 'pending':
+      case 'reviewing':
+        return <Clock className="w-4 h-4 text-yellow-600" />;
+      default:
+        return null;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'passed':
+        return 'bg-green-100 text-green-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      case 'pending':
+      case 'reviewing':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -107,6 +174,12 @@ const Challenge = () => {
                   <Badge className={getDifficultyColor(challenge.difficulty)}>
                     {challenge.difficulty}
                   </Badge>
+                  {userProgress && (
+                    <Badge className={getStatusColor(userProgress.status)}>
+                      {getStatusIcon(userProgress.status)}
+                      <span className="ml-1">{userProgress.status}</span>
+                    </Badge>
+                  )}
                 </div>
               </div>
               
@@ -114,6 +187,11 @@ const Challenge = () => {
               
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-sm text-gray-500">Points: {challenge.points}</span>
+                {userProgress && (
+                  <span className="text-sm text-gray-500">
+                    Best Score: {userProgress.best_score} | Attempts: {userProgress.attempts}
+                  </span>
+                )}
                 {challenge.app_url && (
                   <a
                     href={challenge.app_url}
@@ -135,6 +213,40 @@ const Challenge = () => {
                 ))}
               </div>
             </div>
+
+            {/* Progress and Submissions */}
+            {submissions.length > 0 && (
+              <Card className="mb-6 flex-shrink-0">
+                <CardHeader>
+                  <CardTitle>Your Submissions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {submissions.slice(0, 3).map((submission) => (
+                      <div key={submission.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          {getStatusIcon(submission.status)}
+                          <div>
+                            <p className="font-medium">{submission.submission_type}</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(submission.submitted_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge className={getStatusColor(submission.status)}>
+                            {submission.status}
+                          </Badge>
+                          {submission.score && (
+                            <p className="text-sm text-gray-500 mt-1">Score: {submission.score}/100</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Instructions */}
             <Card className="mb-6 flex-shrink-0">
@@ -167,9 +279,9 @@ const Challenge = () => {
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
                 {testMode === 'manual' ? (
-                  <ManualTestEditor />
+                  <ManualTestEditor onTestCasesChange={setManualTestCases} />
                 ) : (
-                  <AutomationCodeEditor />
+                  <AutomationCodeEditor onCodeChange={setAutomationCode} />
                 )}
               </CardContent>
             </Card>
@@ -186,13 +298,11 @@ const Challenge = () => {
               </Button>
               
               <div className="flex gap-3">
-                {testMode === 'automation' && (
-                  <Button variant="outline">
-                    Run Code
-                  </Button>
-                )}
-                <Button onClick={handleSubmit}>
-                  Submit Solution
+                <Button 
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || (!manualTestCases.length && !automationCode)}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Solution'}
                 </Button>
               </div>
             </div>

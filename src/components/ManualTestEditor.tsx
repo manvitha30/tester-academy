@@ -1,246 +1,291 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Copy, Download } from 'lucide-react';
 
 interface TestCase {
   id: string;
-  testCaseId: string;
   title: string;
-  module: string;
-  preconditions: string;
-  testSteps: string;
-  testData: string;
+  steps: string[];
   expectedResult: string;
-  actualResult: string;
-  status: 'Pass' | 'Fail' | 'Not Executed';
-  severity: 'Low' | 'Medium' | 'High' | 'Critical';
-  executedBy: string;
-  executionDate: string;
-  comments: string;
+  actualResult?: string;
+  status: 'pass' | 'fail' | 'pending';
+  priority: 'high' | 'medium' | 'low';
 }
 
-const ManualTestEditor = () => {
-  const [testCases, setTestCases] = useState<TestCase[]>([
-    {
-      id: '1',
-      testCaseId: 'TC_UI_001',
-      title: 'Verify login with valid credentials',
-      module: 'Login',
-      preconditions: 'User has valid account credentials',
-      testSteps: '1. Navigate to login page\n2. Enter valid username\n3. Enter valid password\n4. Click login button',
-      testData: 'Username: testuser@example.com\nPassword: Password123!',
-      expectedResult: 'User is successfully logged in and redirected to dashboard',
-      actualResult: '',
-      status: 'Not Executed',
-      severity: 'High',
-      executedBy: '',
-      executionDate: '',
-      comments: ''
+interface ManualTestEditorProps {
+  onTestCasesChange?: (testCases: TestCase[]) => void;
+}
+
+const ManualTestEditor: React.FC<ManualTestEditorProps> = ({ onTestCasesChange }) => {
+  const [testCases, setTestCases] = useState<TestCase[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Initialize with one empty test case
+    if (testCases.length === 0) {
+      addTestCase();
     }
-  ]);
+  }, []);
+
+  useEffect(() => {
+    // Notify parent component of changes
+    if (onTestCasesChange) {
+      onTestCasesChange(testCases);
+    }
+  }, [testCases, onTestCasesChange]);
 
   const addTestCase = () => {
     const newTestCase: TestCase = {
-      id: Date.now().toString(),
-      testCaseId: `TC_UI_${String(testCases.length + 1).padStart(3, '0')}`,
+      id: `tc-${Date.now()}`,
       title: '',
-      module: '',
-      preconditions: '',
-      testSteps: '',
-      testData: '',
+      steps: [''],
       expectedResult: '',
       actualResult: '',
-      status: 'Not Executed',
-      severity: 'Medium',
-      executedBy: '',
-      executionDate: '',
-      comments: ''
+      status: 'pending',
+      priority: 'medium'
     };
+    
     setTestCases([...testCases, newTestCase]);
+    setEditingIndex(testCases.length);
   };
 
-  const removeTestCase = (id: string) => {
-    setTestCases(testCases.filter(tc => tc.id !== id));
+  const updateTestCase = (index: number, field: keyof TestCase, value: any) => {
+    const updated = [...testCases];
+    updated[index] = { ...updated[index], [field]: value };
+    setTestCases(updated);
   };
 
-  const updateTestCase = (id: string, field: keyof TestCase, value: string) => {
-    setTestCases(testCases.map(tc => 
-      tc.id === id ? { ...tc, [field]: value } : tc
-    ));
+  const addStep = (testCaseIndex: number) => {
+    const updated = [...testCases];
+    updated[testCaseIndex].steps.push('');
+    setTestCases(updated);
+  };
+
+  const updateStep = (testCaseIndex: number, stepIndex: number, value: string) => {
+    const updated = [...testCases];
+    updated[testCaseIndex].steps[stepIndex] = value;
+    setTestCases(updated);
+  };
+
+  const removeStep = (testCaseIndex: number, stepIndex: number) => {
+    const updated = [...testCases];
+    updated[testCaseIndex].steps.splice(stepIndex, 1);
+    setTestCases(updated);
+  };
+
+  const removeTestCase = (index: number) => {
+    const updated = testCases.filter((_, i) => i !== index);
+    setTestCases(updated);
+    setEditingIndex(null);
+  };
+
+  const exportTestCases = () => {
+    const dataStr = JSON.stringify(testCases, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'test-cases.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const copyTestCases = () => {
+    const testCasesText = testCases.map(tc => 
+      `Test Case: ${tc.title}\n` +
+      `Priority: ${tc.priority}\n` +
+      `Steps:\n${tc.steps.map((step, i) => `${i + 1}. ${step}`).join('\n')}\n` +
+      `Expected Result: ${tc.expectedResult}\n` +
+      `Status: ${tc.status}\n\n`
+    ).join('');
+    
+    navigator.clipboard.writeText(testCasesText);
+  };
+
+  const getStatusColor = (status: TestCase['status']) => {
+    switch (status) {
+      case 'pass': return 'bg-green-100 text-green-800';
+      case 'fail': return 'bg-red-100 text-red-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityColor = (priority: TestCase['priority']) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center py-2 mb-4">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Manual Test Cases</h3>
-        <Button onClick={addTestCase} size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Test Case
-        </Button>
-      </div>
-      
-      <div className="flex-1 border rounded-lg overflow-hidden">
-        <div className="h-full overflow-auto">
-          <Table>
-            <TableHeader className="sticky top-0 bg-white z-10">
-              <TableRow>
-                <TableHead className="min-w-[120px]">Test Case ID</TableHead>
-                <TableHead className="min-w-[200px]">Title</TableHead>
-                <TableHead className="min-w-[120px]">Module</TableHead>
-                <TableHead className="min-w-[200px]">Preconditions</TableHead>
-                <TableHead className="min-w-[300px]">Test Steps</TableHead>
-                <TableHead className="min-w-[200px]">Test Data</TableHead>
-                <TableHead className="min-w-[250px]">Expected Result</TableHead>
-                <TableHead className="min-w-[250px]">Actual Result</TableHead>
-                <TableHead className="min-w-[120px]">Status</TableHead>
-                <TableHead className="min-w-[100px]">Severity</TableHead>
-                <TableHead className="min-w-[150px]">Executed By</TableHead>
-                <TableHead className="min-w-[140px]">Execution Date</TableHead>
-                <TableHead className="min-w-[200px]">Comments</TableHead>
-                <TableHead className="min-w-[80px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {testCases.map((testCase) => (
-                <TableRow key={testCase.id}>
-                  <TableCell>
-                    <Input
-                      value={testCase.testCaseId}
-                      onChange={(e) => updateTestCase(testCase.id, 'testCaseId', e.target.value)}
-                      className="min-w-[110px]"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Textarea
-                      value={testCase.title}
-                      onChange={(e) => updateTestCase(testCase.id, 'title', e.target.value)}
-                      placeholder="Test case title"
-                      className="min-w-[180px] min-h-[80px] resize-none"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      value={testCase.module}
-                      onChange={(e) => updateTestCase(testCase.id, 'module', e.target.value)}
-                      placeholder="Feature/Module"
-                      className="min-w-[110px]"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Textarea
-                      value={testCase.preconditions}
-                      onChange={(e) => updateTestCase(testCase.id, 'preconditions', e.target.value)}
-                      placeholder="Preconditions"
-                      className="min-w-[180px] min-h-[80px] resize-none"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Textarea
-                      value={testCase.testSteps}
-                      onChange={(e) => updateTestCase(testCase.id, 'testSteps', e.target.value)}
-                      placeholder="Test steps"
-                      className="min-w-[280px] min-h-[100px] resize-none"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Textarea
-                      value={testCase.testData}
-                      onChange={(e) => updateTestCase(testCase.id, 'testData', e.target.value)}
-                      placeholder="Test data"
-                      className="min-w-[180px] min-h-[80px] resize-none"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Textarea
-                      value={testCase.expectedResult}
-                      onChange={(e) => updateTestCase(testCase.id, 'expectedResult', e.target.value)}
-                      placeholder="Expected result"
-                      className="min-w-[230px] min-h-[80px] resize-none"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Textarea
-                      value={testCase.actualResult}
-                      onChange={(e) => updateTestCase(testCase.id, 'actualResult', e.target.value)}
-                      placeholder="Actual result"
-                      className="min-w-[230px] min-h-[80px] resize-none"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={testCase.status}
-                      onValueChange={(value) => updateTestCase(testCase.id, 'status', value)}
-                    >
-                      <SelectTrigger className="min-w-[110px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Not Executed">Not Executed</SelectItem>
-                        <SelectItem value="Pass">Pass</SelectItem>
-                        <SelectItem value="Fail">Fail</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={testCase.severity}
-                      onValueChange={(value) => updateTestCase(testCase.id, 'severity', value)}
-                    >
-                      <SelectTrigger className="min-w-[90px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Low">Low</SelectItem>
-                        <SelectItem value="Medium">Medium</SelectItem>
-                        <SelectItem value="High">High</SelectItem>
-                        <SelectItem value="Critical">Critical</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      value={testCase.executedBy}
-                      onChange={(e) => updateTestCase(testCase.id, 'executedBy', e.target.value)}
-                      placeholder="Tester name"
-                      className="min-w-[130px]"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="date"
-                      value={testCase.executionDate}
-                      onChange={(e) => updateTestCase(testCase.id, 'executionDate', e.target.value)}
-                      className="min-w-[130px]"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Textarea
-                      value={testCase.comments}
-                      onChange={(e) => updateTestCase(testCase.id, 'comments', e.target.value)}
-                      placeholder="Comments/Notes"
-                      className="min-w-[180px] min-h-[80px] resize-none"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeTestCase(testCase.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={copyTestCases}>
+            <Copy className="w-4 h-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportTestCases}>
+            <Download className="w-4 h-4" />
+          </Button>
+          <Button onClick={addTestCase}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Test Case
+          </Button>
         </div>
+      </div>
+
+      <div className="space-y-4 max-h-[600px] overflow-y-auto">
+        {testCases.map((testCase, index) => (
+          <Card key={testCase.id} className="border">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">
+                  Test Case #{index + 1}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Badge className={getPriorityColor(testCase.priority)}>
+                    {testCase.priority}
+                  </Badge>
+                  <Badge className={getStatusColor(testCase.status)}>
+                    {testCase.status}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeTestCase(index)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Title</label>
+                  <Input
+                    value={testCase.title}
+                    onChange={(e) => updateTestCase(index, 'title', e.target.value)}
+                    placeholder="Enter test case title"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Priority</label>
+                  <Select
+                    value={testCase.priority}
+                    onValueChange={(value) => updateTestCase(index, 'priority', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium">Test Steps</label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addStep(index)}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Add Step
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {testCase.steps.map((step, stepIndex) => (
+                    <div key={stepIndex} className="flex gap-2">
+                      <span className="text-sm text-gray-500 mt-2 min-w-[20px]">
+                        {stepIndex + 1}.
+                      </span>
+                      <Input
+                        value={step}
+                        onChange={(e) => updateStep(index, stepIndex, e.target.value)}
+                        placeholder={`Step ${stepIndex + 1}`}
+                        className="flex-1"
+                      />
+                      {testCase.steps.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeStep(index, stepIndex)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-1 block">Expected Result</label>
+                <Textarea
+                  value={testCase.expectedResult}
+                  onChange={(e) => updateTestCase(index, 'expectedResult', e.target.value)}
+                  placeholder="Describe the expected result"
+                  rows={2}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Actual Result (Optional)</label>
+                  <Textarea
+                    value={testCase.actualResult || ''}
+                    onChange={(e) => updateTestCase(index, 'actualResult', e.target.value)}
+                    placeholder="Record the actual result after execution"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Status</label>
+                  <Select
+                    value={testCase.status}
+                    onValueChange={(value) => updateTestCase(index, 'status', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="pass">Pass</SelectItem>
+                      <SelectItem value="fail">Fail</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="text-sm text-gray-500">
+        <p>💡 <strong>Tips for effective test cases:</strong></p>
+        <ul className="list-disc ml-6 mt-1 space-y-1">
+          <li>Write clear, actionable steps that anyone can follow</li>
+          <li>Include both positive and negative test scenarios</li>
+          <li>Be specific about expected results</li>
+          <li>Test edge cases and boundary conditions</li>
+          <li>Consider accessibility and usability aspects</li>
+        </ul>
       </div>
     </div>
   );

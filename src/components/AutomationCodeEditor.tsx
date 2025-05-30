@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,17 @@ interface Language {
   extension: string;
 }
 
-const AutomationCodeEditor = () => {
+interface AutomationSubmission {
+  language: string;
+  code: string;
+  framework: string;
+}
+
+interface AutomationCodeEditorProps {
+  onCodeChange?: (code: AutomationSubmission) => void;
+}
+
+const AutomationCodeEditor: React.FC<AutomationCodeEditorProps> = ({ onCodeChange }) => {
   const [selectedLanguage, setSelectedLanguage] = useState('java');
   const [code, setCode] = useState('');
 
@@ -21,29 +31,162 @@ const AutomationCodeEditor = () => {
       id: 'java',
       name: 'Java (Selenium)',
       extension: 'java',
-      template: `// Write your Java Selenium test code here
-// Example: WebDriver driver = new ChromeDriver();`
+      template: `import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+
+public class ChallengeTest {
+    private WebDriver driver;
+    private WebDriverWait wait;
+
+    @BeforeEach
+    public void setUp() {
+        driver = new ChromeDriver();
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    }
+
+    @Test
+    public void testChallenge() {
+        // Navigate to the application
+        driver.get("APPLICATION_URL");
+        
+        // TODO: Implement your test logic here
+        // Example: WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("element-id")));
+        
+        // Add assertions to verify expected outcomes
+        // Example: Assert.assertEquals("Expected Text", element.getText());
+    }
+
+    @AfterEach
+    public void tearDown() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+}`
     },
     {
       id: 'python',
       name: 'Python (Selenium)',
       extension: 'py',
-      template: `# Write your Python Selenium test code here
-# Example: driver = webdriver.Chrome()`
+      template: `from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+import pytest
+import time
+
+class TestChallenge:
+    def setup_method(self):
+        # Initialize WebDriver
+        self.driver = webdriver.Chrome()
+        self.wait = WebDriverWait(self.driver, 10)
+    
+    def teardown_method(self):
+        # Clean up
+        if self.driver:
+            self.driver.quit()
+    
+    def test_challenge(self):
+        # Navigate to the application
+        self.driver.get("APPLICATION_URL")
+        
+        # TODO: Implement your test logic here
+        # Example: element = self.wait.until(EC.visibility_of_element_located((By.ID, "element-id")))
+        
+        # Add assertions to verify expected outcomes
+        # Example: assert element.text == "Expected Text"
+        
+        pass
+
+if __name__ == "__main__":
+    pytest.main([__file__])`
     },
     {
       id: 'javascript',
       name: 'JavaScript (WebDriverIO)',
       extension: 'js',
-      template: `// Write your JavaScript WebDriverIO test code here
-// Example: await browser.url('https://example.com')`
+      template: `const { remote } = require('webdriverio');
+
+describe('Challenge Test Suite', () => {
+    let browser;
+
+    before(async () => {
+        browser = await remote({
+            capabilities: {
+                browserName: 'chrome'
+            }
+        });
+    });
+
+    after(async () => {
+        if (browser) {
+            await browser.deleteSession();
+        }
+    });
+
+    it('should complete the challenge', async () => {
+        // Navigate to the application
+        await browser.url('APPLICATION_URL');
+        
+        // TODO: Implement your test logic here
+        // Example: const element = await browser.$('#element-id');
+        // Example: await element.waitForDisplayed();
+        
+        // Add assertions to verify expected outcomes
+        // Example: expect(await element.getText()).toBe('Expected Text');
+    });
+});`
     },
     {
       id: 'csharp',
       name: 'C# (Selenium)',
       extension: 'cs',
-      template: `// Write your C# Selenium test code here
-// Example: IWebDriver driver = new ChromeDriver();`
+      template: `using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.UI;
+using NUnit.Framework;
+using System;
+
+[TestFixture]
+public class ChallengeTest
+{
+    private IWebDriver driver;
+    private WebDriverWait wait;
+
+    [SetUp]
+    public void SetUp()
+    {
+        driver = new ChromeDriver();
+        wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        driver?.Quit();
+    }
+
+    [Test]
+    public void TestChallenge()
+    {
+        // Navigate to the application
+        driver.Navigate().GoToUrl("APPLICATION_URL");
+        
+        // TODO: Implement your test logic here
+        // Example: IWebElement element = wait.Until(ExpectedConditions.ElementIsVisible(By.Id("element-id")));
+        
+        // Add assertions to verify expected outcomes
+        // Example: Assert.AreEqual("Expected Text", element.Text);
+    }
+}`
     }
   ];
 
@@ -51,9 +194,23 @@ const AutomationCodeEditor = () => {
     const language = languages.find(lang => lang.id === languageId);
     if (language) {
       setSelectedLanguage(languageId);
-      if (!code.trim()) {
+      if (!code.trim() || code === languages.find(lang => lang.id === selectedLanguage)?.template) {
         setCode(language.template);
       }
+    }
+  };
+
+  const handleCodeChange = (newCode: string) => {
+    setCode(newCode);
+    
+    // Notify parent component
+    if (onCodeChange) {
+      const language = languages.find(lang => lang.id === selectedLanguage);
+      onCodeChange({
+        language: selectedLanguage,
+        code: newCode,
+        framework: language?.name || 'Unknown'
+      });
     }
   };
 
@@ -78,13 +235,27 @@ const AutomationCodeEditor = () => {
     URL.revokeObjectURL(url);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Initialize with Java template
     const javaLanguage = languages.find(lang => lang.id === 'java');
     if (javaLanguage && !code.trim()) {
       setCode(javaLanguage.template);
     }
   }, []);
+
+  useEffect(() => {
+    // Notify parent when code changes
+    if (code.trim()) {
+      const language = languages.find(lang => lang.id === selectedLanguage);
+      if (onCodeChange) {
+        onCodeChange({
+          language: selectedLanguage,
+          code: code,
+          framework: language?.name || 'Unknown'
+        });
+      }
+    }
+  }, [code, selectedLanguage, onCodeChange]);
 
   return (
     <div className="space-y-4">
@@ -119,24 +290,26 @@ const AutomationCodeEditor = () => {
           </span>
           <Button size="sm" onClick={handleRunCode} className="bg-green-600 hover:bg-green-700">
             <Play className="w-4 h-4 mr-2" />
-            Run Code
+            Validate Code
           </Button>
         </div>
         <Textarea
           value={code}
-          onChange={(e) => setCode(e.target.value)}
+          onChange={(e) => handleCodeChange(e.target.value)}
           className="min-h-[500px] border-0 rounded-none font-mono text-sm resize-none"
           placeholder="Write your automation code here..."
         />
       </div>
       
       <div className="text-sm text-gray-500">
-        <p>💡 <strong>Tips:</strong></p>
+        <p>💡 <strong>Tips for quality automation code:</strong></p>
         <ul className="list-disc ml-6 mt-1 space-y-1">
           <li>Use explicit waits instead of implicit waits or Thread.sleep()</li>
+          <li>Implement the Page Object Model pattern for maintainability</li>
           <li>Write clear assertions to verify expected outcomes</li>
           <li>Handle exceptions gracefully and ensure proper cleanup</li>
           <li>Use meaningful variable names and add comments for complex logic</li>
+          <li>Follow your framework's best practices and conventions</li>
         </ul>
       </div>
     </div>
